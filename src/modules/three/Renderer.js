@@ -45,6 +45,9 @@ export let system = class extends ECS.System {
 		this.axesHelper = new THREE.AxesHelper(.1);
 		this.scene.add(this.axesHelper);//The X axis is red. The Y axis is green. The Z axis is blue.
 		
+		let helper = new THREE.CameraHelper(this.camera);
+		this.scene.add(helper);
+		
 		//Add hemisphere light
 		let hemiLight = new THREE.HemisphereLight(0xffffff, 0xffffff, 0.1);
 		hemiLight.color.setHSL(0.6, 0.6, 0.6);

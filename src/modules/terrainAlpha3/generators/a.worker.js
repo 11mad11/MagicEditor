@@ -16,8 +16,8 @@ self.onmessage = (event) => {
 	opt.centerVec = new THREE.Vector3(opt.centerVec.x, opt.centerVec.y, opt.centerVec.z);
 	
 	//derviate
-	opt.sphereCenter = opt.centerVec.clone().add(new THREE.Vector3(0, opt.islandSize / 8, 0));
-	opt.sphere2Center = opt.centerVec.clone().add(new THREE.Vector3(opt.islandSize / 8, opt.islandSize / 8, 0));
+	opt.sphereCenter = opt.centerVec.clone().add(new THREE.Vector3(0, 5, 0));
+	opt.sphere2Center = opt.centerVec.clone().add(new THREE.Vector3(5, 3, 0));
 	
 	genGeo(geo, chunk, opt, noise);
 	postMessage(geo);
@@ -38,15 +38,21 @@ function val(pos, options, noise) {
 	
 	//val =
 	
-	let val  = pos.y < 50  ? 1 : 0;//plateau
-	intersect(val,(1 + noise.getValue(pos.x, pos.y, pos.z)) / 2);
+	let plateau = pos.y < options.centerVec.y ? 1 : 0;//plateau
+	let noise1 = (1 + noise.getValue(pos.x, pos.y * 5, pos.z)) / 2;
+	let islandBound = clamp(-Math.log(vec.distanceTo(options.centerVec) / options.islandSize * 2));//sphere
+	let islandBoundHard = sphere(vec, options.centerVec, options.islandSize / 2);//sphere
 	
-	let v = sphere(vec, options.sphereCenter, options.islandSize / 4);
+	let val = noise1;
+	val = intersect(val, plateau);
+	//val = normalize(val);
+	val = intersect(val, islandBoundHard);
+	
+	let v = sphere(vec, options.sphereCenter, 10);
 	val = union(val, v);
-	v = sphere(vec, options.sphere2Center, options.islandSize / 4);
+	v = sphere(vec, options.sphere2Center, 10);
 	val = intersect(val, not(v));
 	
-	//val *= clamp(-Math.log((y + 50) / chunk.h));//sphere
 	//val *= clamp(ycap);
 	
 	return vec.length() < 10 ? not(val) : val;
@@ -55,8 +61,10 @@ function val(pos, options, noise) {
 ///Form
 
 function sphere(vec, center, radius) {
-	let length = vec.distanceTo(center);
-	return length < radius ? 1 : 0;//sphere
+	let length = vec.distanceTo(center) + 1;
+	let len = length - radius;
+	len /= 2;
+	return length < radius ? 1 : clamp((1 - len));//sphere
 }
 
 ////Utils
@@ -66,7 +74,7 @@ function intersect(val, input) {
 }
 
 function union(val, input) {
-	return normalize((val + input) / 2);
+	return clamp(val + input);
 }
 
 function not(val) {
@@ -81,7 +89,7 @@ function genGeo(geo, chunk, options, noise) {
 	
 	let isolevel = .5;
 	
-	console.log('march');
+	//console.log('march');
 	for (let y = chunk.y; y < chunk.h + chunk.y; y++) {
 		for (let z = chunk.z; z < chunk.d + chunk.z; z++) {
 			for (let x = chunk.x; x < chunk.w + chunk.x; x++) {
@@ -198,7 +206,7 @@ function VertexInterp(isolevel, p1, p2, valp1, valp2, options) {
 }
 
 function normalize(val) {
-	return val > .499999999?1:0;
+	return val > .499999999 ? 1 : 0;
 }
 
 const edgeTable = [

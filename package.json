@@ -15,7 +15,7 @@
     "@fritzy/ecs": "^0.5.2",
     "ammojs-typed": "^1.0.6",
     "libnoise": "^0.2.1",
-    "three": "^0.119.1"
+    "three": "^0.125.0"
   },
   "devDependencies": {
     "@babel/core": "^7.11.1",
